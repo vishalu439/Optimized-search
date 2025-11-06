@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 
 const perPage = 50;
@@ -16,15 +16,25 @@ export default function Home() {
   const [occupation, setOccupation] = useState("");
   const [email, setEmail] = useState("");
 
-  const fetchUsers = useCallback(async () => {
+  // Store latest filters in a ref for fetchUsers
+  const filtersRef = useRef({ q, city, occupation, email });
+
+  // Update ref whenever filters change
+  useEffect(() => {
+    filtersRef.current = { q, city, occupation, email };
+  }, [q, city, occupation, email]);
+
+  // Function to fetch users with given page and filters
+  const fetchUsers = async (pageNumber = 1) => {
     setLoading(true);
     try {
+      const { q, city, occupation, email } = filtersRef.current;
       const params = new URLSearchParams({
         q,
         city,
         occupation,
         email,
-        page: page.toString(),
+        page: pageNumber.toString(),
       });
       const res = await fetch(`/api/users?${params.toString()}`);
       const data = await res.json();
@@ -35,24 +45,29 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [q, city, occupation, email, page]);
+  };
 
-  // Debounce search input
+  // Debounced search/filter effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(1); // reset page on new search/filter
-      fetchUsers();
+      setPage(1); // reset page
+      fetchUsers(1); // fetch for page 1
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [q, city, occupation, email, page, fetchUsers]);
+  }, [q, city, occupation, email]);
+
+  // Fetch when page changes
+  useEffect(() => {
+    fetchUsers(page);
+  }, [page]);
 
   const handlePrev = () => {
-    if (page > 1) setPage(page - 1);
+    if (page > 1) setPage((p) => p - 1);
   };
 
   const handleNext = () => {
-    if (page * perPage < total) setPage(page + 1);
+    if (page * perPage < total) setPage((p) => p + 1);
   };
 
   return (
