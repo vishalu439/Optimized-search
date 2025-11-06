@@ -26,7 +26,7 @@ export default function Home() {
 
   // Function to fetch users with given page and filters
   const fetchUsers = async (pageNumber = 1) => {
-    setLoading(true);
+    setLoading(true); // show loading spinner
     try {
       const { q, city, occupation, email } = filtersRef.current;
       const params = new URLSearchParams({
@@ -38,12 +38,12 @@ export default function Home() {
       });
       const res = await fetch(`/api/users?${params.toString()}`);
       const data = await res.json();
-      setUsers(data.items);
+      setUsers(data.items); // update users after data arrives
       setTotal(data.total);
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false); // hide loading spinner
     }
   };
 
@@ -51,7 +51,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1); // reset page
-      fetchUsers(1); // fetch for page 1
+      fetchUsers(1); // fetch first page
     }, 300);
 
     return () => clearTimeout(timer);
@@ -113,20 +113,16 @@ export default function Home() {
         </button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        <div className={styles.userList}>
-          {users.map((user) => (
-            <div key={user.id} className={styles.userItem}>
-              <strong>{user.name}</strong> — {user.email} — {user.city} —{" "}
-              {user.occupation}
-            </div>
-          ))}
-        </div>
-      )}
+      {loading && <p>Loading...</p>}
+
+      <div className={styles.userList}>
+        {users.map((user) => (
+          <div key={user.id} className={styles.userItem}>
+            <strong>{user.name}</strong> — {user.email} — {user.city} —{" "}
+            {user.occupation}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
